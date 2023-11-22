@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "mode": "All",
+    "displayName" :"Prevent the creation of VM with public IP",
+    "description": "This policy prevents the creation of virtual machines with public IP addresses.",
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Network/networkInterfaces"
+          },
+          {
+            "anyOf": [
+              {
+                "field": "Microsoft.Network/networkInterfaces/ipConfigurations[*].publicIpAddress.id",
+                "exists": "true"
+              },
+              {
+                "field": "Microsoft.Compute/virtualMachines/networkProfile.networkInterfaceConfigurations[*].ipConfigurations[*].publicIPAddressConfiguration",
+                "exists": "true"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "deny"
+      }
+    },
+    "parameters": {}
+  }
+}
