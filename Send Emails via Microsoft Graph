@@ -111,8 +111,9 @@ Invoke-RestMethod -Uri "https://graph.microsoft.com/v1.0/users/your-email@domain
     -ContentType "application/json"
 
 Write-Host "Email sent successfully!"
-
+###################################################################################################################################
 Full PowerShell Script Example
+
 
 # Step 1: Connect to Microsoft Graph
 Connect-MgGraph -Scopes "Application.ReadWrite.All", "Directory.ReadWrite.All"
