@@ -1,0 +1,185 @@
+How to Send Emails via Microsoft Graph API Using PowerShell (Full Guide)
+
+This guide walks through how to register an Azure AD application via PowerShell, configure permissions, and use the Microsoft Graph API to send an email—all through PowerShell.
+Prerequisites
+	• Azure Active Directory access with permissions to create app registrations.
+	• PowerShell installed on your machine.
+	• Microsoft Graph PowerShell SDK installed.
+
+Step 1: Install Microsoft Graph PowerShell SDK
+Before registering the app and working with Microsoft Graph API, you need to install the SDK:
+
+powershell
+Copy code
+Install-Module Microsoft.Graph -Scope CurrentUser
+
+Step 2: Register an Application in Azure AD Using PowerShell
+	1. Connect to Microsoft Graph: First, authenticate to Azure AD using Microsoft Graph PowerShell.
+
+powershell
+Copy code
+Connect-MgGraph -Scopes "Application.ReadWrite.All", "Directory.ReadWrite.All"
+
+You'll be prompted to log in with your Azure credentials.
+	2. Register a New App: Now, let's register the application in Azure AD that will send emails.
+
+Powershell 
+	
+	
+	$AppName = "GraphMailApp"
+$App = New-MgApplication -DisplayName $AppName
+Write-Host "App ID: $($App.AppId)"
+Write-Host "Object ID: $($App.Id)"
+
+This creates a new application in Azure Entra ID and stores the App ID (Client ID) and Object ID for future use.
+	3. Create a Client Secret: You need a client secret to authenticate the application when using Microsoft Graph.
+
+$Secret = New-MgApplicationPasswordCredential -ApplicationId $App.Id -DisplayName "AppSecret" -StartDateTime (Get-Date) -EndDateTime (Get-Date).AddYears(1)
+Write-Host "Client Secret: $($Secret.SecretText)"
+
+Important: Copy the SecretText value as it will not be shown again. You'll need this value for authentication.
+	4. Grant Permissions for Sending Emails: The app needs permission to send emails on behalf of a user. Add the Mail.Send permission:
+
+$graphApiId = "00000003-0000-0000-c000-000000000000"  # Microsoft Graph API ID
+
+# Define permissions for Mail.Send
+$requiredPermissions = @(
+    @{
+        "ResourceAppId" = $graphApiId
+        "ResourceAccess" = @(
+            @{
+                "Id" = "E383F46E-2787-4529-855E-0E479A3FFAC0"  # Mail.Send permission ID
+                "Type" = "Scope"
+            }
+        )
+    }
+)
+
+Update-MgApplication -ApplicationId $App.Id -RequiredResourceAccess $requiredPermissions
+	5. Grant Admin Consent: You must grant admin consent to allow the app to use the requested permissions:
+
+	Start-MgServicePrincipalConsent -Id $App.Id
+	
+Now the app is fully registered and has the necessary permissions to send emails using Microsoft Graph API.
+
+Step 3: Use PowerShell to Send an Email via Microsoft Graph
+Now that the app is registered, let's write the PowerShell script to send an email using the Mail.Send permission through Microsoft Graph.
+	1. Authenticate and Get an Access Token: Use the client credentials flow to get an access token that will allow you to call Microsoft Graph.
+$tenantId = "your-tenant-id"
+$clientId = "your-client-id"
+$clientSecret = "your-client-secret"
+$scope = "https://graph.microsoft.com/.default"
+
+# Request access token
+$body = @{
+    client_id     = $clientId
+    scope         = $scope
+    client_secret = $clientSecret
+    grant_type    = "client_credentials"
+}
+
+$response = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token" -Method Post -ContentType "application/x-www-form-urlencoded" -Body $body
+$token = $response.access_token
+Write-Host "Access Token: $token"
+	2. Create the Email Message: Now that we have an access token, let's prepare the email body and send it.
+
+$emailBody = @{
+    message = @{
+        subject = "Test email from Microsoft Graph API"
+        body = @{
+            contentType = "HTML"
+            content = "<h1>Hello from PowerShell and Microsoft Graph API!</h1>"
+        }
+        toRecipients = @(
+            @{
+                emailAddress = @{
+                    address = "recipient@example.com"
+                }
+            }
+        )
+    }
+    saveToSentItems = "true"
+}
+
+$emailBodyJson = $emailBody | ConvertTo-Json -Depth 10
+	3. Send the Email: Use the access token and Microsoft Graph API endpoint to send the email.
+
+Invoke-RestMethod -Uri "https://graph.microsoft.com/v1.0/users/your-email@domain.com/sendMail" `
+    -Method Post `
+    -Headers @{Authorization = "Bearer $token"} `
+    -Body $emailBodyJson `
+    -ContentType "application/json"
+
+Write-Host "Email sent successfully!"
+
+Full PowerShell Script Example
+
+# Step 1: Connect to Microsoft Graph
+Connect-MgGraph -Scopes "Application.ReadWrite.All", "Directory.ReadWrite.All"
+# Step 2: Register App
+$AppName = "GraphMailApp"
+$App = New-MgApplication -DisplayName $AppName
+Write-Host "App ID: $($App.AppId)"
+Write-Host "Object ID: $($App.Id)"
+# Step 3: Create Client Secret
+$Secret = New-MgApplicationPasswordCredential -ApplicationId $App.Id -DisplayName "AppSecret" -StartDateTime (Get-Date) -EndDateTime (Get-Date).AddYears(1)
+Write-Host "Client Secret: $($Secret.SecretText)"
+# Step 4: Add Permissions
+$graphApiId = "00000003-0000-0000-c000-000000000000"  # Microsoft Graph API ID
+$requiredPermissions = @(
+    @{
+        "ResourceAppId" = $graphApiId
+        "ResourceAccess" = @(
+            @{
+                "Id" = "E383F46E-2787-4529-855E-0E479A3FFAC0"  # Mail.Send permission ID
+                "Type" = "Scope"
+            }
+        )
+    }
+)
+Update-MgApplication -ApplicationId $App.Id -RequiredResourceAccess $requiredPermissions
+# Step 5: Get Access Token
+$tenantId = "your-tenant-id"
+$clientId = "your-client-id"
+$clientSecret = "your-client-secret"
+$scope = "https://graph.microsoft.com/.default"
+$body = @{
+    client_id     = $clientId
+    scope         = $scope
+    client_secret = $clientSecret
+    grant_type    = "client_credentials"
+}
+$response = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token" -Method Post -ContentType "application/x-www-form-urlencoded" -Body $body
+$token = $response.access_token
+Write-Host "Access Token: $token"
+# Step 6: Prepare and Send Email
+$emailBody = @{
+    message = @{
+        subject = "Test email from Microsoft Graph API"
+        body = @{
+            contentType = "HTML"
+            content = "<h1>Hello from PowerShell and Microsoft Graph API!</h1>"
+        }
+        toRecipients = @(
+            @{
+                emailAddress = @{
+                    address = "recipient@example.com"
+                }
+            }
+        )
+    }
+    saveToSentItems = "true"
+}
+$emailBodyJson = $emailBody | ConvertTo-Json -Depth 10
+Invoke-RestMethod -Uri "https://graph.microsoft.com/v1.0/users/your-email@domain.com/sendMail" `
+    -Method Post `
+    -Headers @{Authorization = "Bearer $token"} `
+    -Body $emailBodyJson `
+    -ContentType "application/json"
+Write-Host "Email sent successfully!"
+
+Conclusion
+By following this guide, you now know how to:
+	• Register an app in Azure AD using PowerShell.
+	• Grant permissions to your app using PowerShell.
+	• Send an email via Microsoft Graph API using PowerShell.
