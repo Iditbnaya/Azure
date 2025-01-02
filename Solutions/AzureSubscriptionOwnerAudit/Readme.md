@@ -92,6 +92,10 @@ Ensure your account has the following permissions:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+
+![image](https://github.com/user-attachments/assets/bd72db29-a73d-4ca0-af95-2d7cf5af44d4)
+
+
 ## Contributing
 
 Contributions are welcome! Please submit a pull request or open an issue for any enhancements or bugs.
