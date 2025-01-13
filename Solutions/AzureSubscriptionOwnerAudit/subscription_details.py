@@ -1,3 +1,10 @@
+#Script Name : SubscriptionDetails.py
+#Description : identify subscription statuses, owner counts, and inheritance details for Azure AD permissions
+#Author		 : Idit Bnaya (iditbnaya@microsoft.com)
+#Keywords	 : Azure, Subscription, Owner, Rbac
+#Date Created: 02.01.2025
+
+
 import os
 import csv
 from azure.identity import DefaultAzureCredential
@@ -5,6 +12,7 @@ from azure.mgmt.resource import SubscriptionClient
 from azure.mgmt.authorization import AuthorizationManagementClient
 from azure.graphrbac import GraphRbacManagementClient
 from tabulate import tabulate
+
 
 def get_tenant_id(subscription_client):
     """Automatically fetch the tenant ID."""
@@ -89,6 +97,9 @@ def main():
     # Export to CSV
     export_to_csv(table_data)
 
+# Cache for group members
+group_members_cache = {}
+
 def get_owner_count_and_inheritance(subscription_id, credential, graph_client):
     from azure.mgmt.authorization import AuthorizationManagementClient
 
@@ -119,8 +130,8 @@ def get_owner_count_and_inheritance(subscription_id, credential, graph_client):
         for role_assignment in auth_client.role_assignments.list_for_scope(
             scope=f"/subscriptions/{subscription_id}"
         ):
-            # Check if the role assignment matches the owner role
-            if role_assignment.role_definition_id.endswith(owner_role_id):
+            principal_id = role_assignment.principal_id
+            if role_assignment.role_definition_id == owner_role_id:
                 principal_type = role_assignment.principal_type
                 principal_id = role_assignment.principal_id
 
@@ -132,7 +143,9 @@ def get_owner_count_and_inheritance(subscription_id, credential, graph_client):
                 if principal_type == "User":
                     unique_owners.add(principal_id)
                 elif principal_type == "Group":
-                    unique_owners.update(resolve_group_members(principal_id, graph_client))
+                    if principal_id not in group_members_cache:
+                        group_members_cache[principal_id] = resolve_group_members(principal_id, graph_client)
+                    unique_owners.update(group_members_cache[principal_id])
                 # Ignore Service Principals and Managed Identities
                 elif principal_type not in ["ServicePrincipal", "ManagedIdentity"]:
                     unique_owners.add(principal_id)

@@ -33,27 +33,20 @@ pip install -r requirements.txt
 
 ## Setup
 
-1. Clone this repository:
-
-```bash
-git clone https://github.com/iditbnaya/SubscriptionOwnerAudit.git
-cd AzureSubscriptionOwnerAudit
-```
-
-2. Create a virtual environment (optional but recommended):
+1. Create a virtual environment (optional but recommended):
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\\Scripts\\activate
 ```
 
-3. Install dependencies:
+2. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Ensure your Azure CLI is authenticated:
+3. Ensure your Azure CLI is authenticated:
 
 ```bash
 az login
@@ -91,10 +84,6 @@ Ensure your account has the following permissions:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-
-![image](https://github.com/user-attachments/assets/bd72db29-a73d-4ca0-af95-2d7cf5af44d4)
-
 
 ## Contributing
 

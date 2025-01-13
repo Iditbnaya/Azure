@@ -1,0 +1,90 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/Azure-Landing-Zones-Library/main/schemas/architecture_definition.json",
+  "name": "MyenvExample",
+  "management_groups": [
+    {
+      "archetypes": [
+        "root"
+      ],
+      "display_name": "Alz-root",
+      "exists": false,
+      "id": "Myenv-alzroot",
+      "parent_id": null
+    },
+    {
+      "archetypes": [
+        "landing_zones"
+      ],
+      "display_name": "Myenv Landing zones",
+      "exists": false,
+      "id": "Myenv-landingzones",
+      "parent_id": "Myenv-alzroot"
+    },
+    {
+      "archetypes": [
+        "corp"
+      ],
+      "display_name": "Myenv Corp",
+      "exists": false,
+      "id": "Myenv-corp",
+      "parent_id": "Myenv-landingzones"
+    },
+    {
+      "archetypes": [
+        "online"
+      ],
+      "display_name": "Myenv Online",
+      "exists": false,
+      "id": "Myenv-online",
+      "parent_id": "Myenv-landingzones"
+    },
+    {
+      "archetypes": [
+        "platform"
+      ],
+      "display_name": "Myenv Platform",
+      "exists": false,
+      "id": "Myenv-platform",
+      "parent_id": "Myenv-alzroot"
+    },
+    {
+      "archetypes": [
+        "sandboxes"
+      ],
+      "display_name": "Myenv Sandboxes",
+      "exists": false,
+      "id": "Myenv-sandboxes",
+      "parent_id": "Myenv-alzroot"
+    },
+    {
+      "archetypes": [
+        "management"
+      ],
+      "display_name": "Myenv Management",
+      "exists": false,
+      "id": "Myenv-management",
+      "parent_id": "Myenv-platform"
+    },
+    {
+      "archetypes": [
+        "connectivity"
+      ],
+      "display_name": "Myenv Connectivity",
+      "exists": false,
+      "id": "Myenv-connectivity",
+      "parent_id": "Myenv-platform"
+    },
+    {
+      "archetypes": [
+        "platform"
+      ],
+      "display_name": "Myenv Shared tools",
+      "exists": false,
+      "id": "Myenv-Shared_tools",
+      "parent_id": "Myenv-platform"
+    }
+    
+ 
+    
+  ]
+}
