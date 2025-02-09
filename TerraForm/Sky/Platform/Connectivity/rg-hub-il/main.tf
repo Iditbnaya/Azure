@@ -1,0 +1,80 @@
+provider "azurerm" {
+  features {}
+  subscription_id = ""
+}
+
+locals {
+  region = "israelcentral"
+  common_tags = {
+    Project     = "HubNetwork"
+    DateCreated = "${timestamp()}"
+    Environment = "Connectivity"
+    CreatedBy   = ""
+  }
+}
+
+resource "azurerm_resource_group" "hub" {
+  name     = "rg-hub-il"
+  location = local.region
+  tags     = local.common_tags
+}
+
+module "hub_vnet" {
+  source              = "../../../modules/vnet"
+  name                = "vnet-hub-il"
+  address_space       = ["10.0.0.0/22"]
+  location            = local.region
+  resource_group_name = azurerm_resource_group.hub.name
+  tags                = local.common_tags
+}
+
+module "hub_subnets" {
+  source               = "../../../modules/subnets"
+  resource_group_name  = azurerm_resource_group.hub.name
+  virtual_network_name = module.hub_vnet.name
+  subnets = {
+    firewall = {
+      name             = "AzureFirewallSubnet"
+      address_prefixes = ["10.0.1.0/26"]
+    }
+    bastion = {
+      name             = "AzureBastionSubnet"
+      address_prefixes = ["10.0.0.64/26"]
+    }
+    gateway = {
+      name             = "GatewaySubnet"
+      address_prefixes = ["10.0.0.128/27"]
+    }
+    private_endpoint = {
+      name             = "private-endpoint-subnet"
+      address_prefixes = ["10.0.2.0/24"]
+    }
+  }
+  tags = local.common_tags
+}
+
+module "firewall" {
+  source               = "../../../modules/firewall"
+  name                 = "fw-hub-il"
+  virtual_network_name = module.hub_vnet.name
+  subnet_id            = module.hub_subnets.subnet_ids["AzureFirewallSubnet"]
+  sku_name             = "AZFW_VNet"
+  sku_tier             = "Premium"
+
+  public_ip_config = {
+    name = "pip-fw-hub-il"
+  }
+
+  firewall_policy = {
+    name = "fwp-hub-il"
+  }
+
+  location            = local.region
+  resource_group_name = azurerm_resource_group.hub.name
+  depends_on          = [module.hub_subnets]
+  tags                = local.common_tags
+}
+
+
+
+
