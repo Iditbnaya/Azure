@@ -22,4 +22,3 @@ output "firewall_private_ip" {
 output "firewall_resource_group" {
   value = module.firewall.resource_group_name
 }
-

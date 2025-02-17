@@ -9,7 +9,7 @@ locals {
     Project     = "HubNetwork"
     DateCreated = "${timestamp()}"
     Environment = "Connectivity"
-    CreatedBy   = "Idit"
+    CreatedBy   = ""
   }
 }
 
@@ -55,53 +55,24 @@ module "hub_subnets" {
 
 module "firewall" {
   source               = "../../../modules/firewall"
-  resource_group_name  = azurerm_resource_group.hub.name
-  location            = local.region
   name                 = "fw-hub-il"
+  virtual_network_name = module.hub_vnet.name
   subnet_id            = module.hub_subnets.subnet_ids["AzureFirewallSubnet"]
   sku_name             = "AZFW_VNet"
   sku_tier             = "Premium"
-
 
   public_ip_config = {
     name = "pip-fw-hub-il"
   }
 
   firewall_policy = {
-      name = "fp-hub-il"
-        dns = {
-          proxy_enabled = true
-        }
-    }
-    tags                = local.common_tags
+    name = "fwp-hub-il"
   }
 
-
-resource "azurerm_route_table" "firewall_rt" {
-  name                  = "rt-firewall-il"  
-  location              = local.region
-  resource_group_name   = azurerm_resource_group.hub.name  
-
-  route {
-    name                   = "internet"
-    address_prefix         = "0.0.0.0/0"
-    next_hop_type          = "Internet"
-  }
-}
-
-# resource "azurerm_route" "firewall_default_route" {
-#   name                  = "internet"
-#   resource_group_name   = azurerm_resource_group.hub.name
-#   route_table_name      = azurerm_route_table.firewall_rt.name
-#   address_prefix        = "0.0.0.0/0"
-#   next_hop_type         = "Internet"
-
-#   #depends_on = [ azurerm_route_table.firewall_rt ]
-# }
-
-resource "azurerm_subnet_route_table_association" "firewall_subnet_association_to_rt" {
-  subnet_id      = module.hub_subnets.subnet_ids["AzureFirewallSubnet"]
-  route_table_id = azurerm_route_table.firewall_rt.id
+  location            = local.region
+  resource_group_name = azurerm_resource_group.hub.name
+  depends_on          = [module.hub_subnets]
+  tags                = local.common_tags
 }
 
 
