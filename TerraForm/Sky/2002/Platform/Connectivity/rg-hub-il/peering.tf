@@ -1,0 +1,33 @@
+# for each spoke VNet subnet add the vnet subscription to variables and providers tf files 
+#add the provider to each data vnet resource
+
+
+
+#peering to monitoring vnet - run after monitoring:
+
+data "azurerm_virtual_network" "monitoring_vnet" {
+  name                = "vnet-monitoring-il"
+  resource_group_name = "rg-monitor-il"
+
+  provider = azurerm.management
+}
+
+
+module "peering_to_monitoring" {
+  source                      = "../../../modules/peering"
+  name                        = "connectivity-to-monitoring"
+  local_vnet_id               = module.hub_vnet.id
+  remote_vnet_id              = data.azurerm_virtual_network.monitoring_vnet.id
+  local_resource_group_name   = azurerm_resource_group.hub.name
+  remote_resource_group_name  = data.azurerm_virtual_network.monitoring_vnet.resource_group_name
+  local_virtual_network_name  = "vnet-hub-il"
+  remote_virtual_network_name = "vnet-monitoring-il"
+
+}
+
+
+  
+  
+  
+
+
